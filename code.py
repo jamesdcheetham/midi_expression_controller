@@ -27,6 +27,8 @@ analog_pins = [left_fader, middle_fader, right_fader]
 analog_in = [analogio.AnalogIn(a_in) for a_in in analog_pins]
 fader_out = [0] * len(analog_pins)
 fader_cc = [left_fader_cc, middle_fader_cc, right_fader_cc]
+fader_prev = [0] * len(analog_pins)
+fader_next = [0] * len(analog_pins)
 
 #error handling
 if type(channel) != int:
@@ -55,9 +57,12 @@ while True:
     for i, fader in enumerate(analog_in):
         fader_out[i] = int((fader.value - 1792) / 480)
         fader_out[i] = max(0, min(127, fader_out[i]))
+        fader_next[i] = fader_out[i]
 
 #send midi data
     for i, fader in enumerate(fader_out):
-        send_midi_control(fader_cc[i], fader_out[i], channel)
+        if fader_next[i] != fader_prev[i]:
+            send_midi_control(fader_cc[i], fader_out[i], channel)
+            fader_prev[i] = fader_next[i]
         
     time.sleep(0.001)
