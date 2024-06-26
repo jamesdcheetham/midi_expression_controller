@@ -25,6 +25,9 @@ midi_out_pin = board.GP4
 #variable set up
 analog_pins = [left_fader, middle_fader, right_fader]
 analog_in = [analogio.AnalogIn(a_in) for a_in in analog_pins]
+fader_out_1 = [0] * len(analog_pins)
+fader_out_2 = [0] * len(analog_pins)
+fader_out_3 = [0] * len(analog_pins)
 fader_out = [0] * len(analog_pins)
 fader_cc = [left_fader_cc, middle_fader_cc, right_fader_cc]
 fader_prev = [0] * len(analog_pins)
@@ -55,7 +58,15 @@ def send_midi_control(control, value, channel):
 while True:
 #read fader inputs
     for i, fader in enumerate(analog_in):
-        fader_out[i] = int((fader.value - 1792) / 480)
+        fader_out_1[i] = fader.value
+    time.sleep(0.001)
+    for i, fader in enumerate(analog_in):
+        fader_out_2[i] = fader.value
+    time.sleep(0.001)
+    for i, fader in enumerate(analog_in):
+        fader_out_3[i] = fader.value
+    for i, fader in enumerate(analog_in):
+        fader_out[i] = int((((fader_out_1[i]+fader_out_2[i]+fader_out_3[i])/3) - 1792) / 480)
         fader_out[i] = max(0, min(127, fader_out[i]))
         fader_next[i] = fader_out[i]
 
@@ -63,6 +74,6 @@ while True:
     for i, fader in enumerate(fader_out):
         if fader_next[i] != fader_prev[i]:
             send_midi_control(fader_cc[i], fader_out[i], channel)
-            fader_prev[i] = fader_next[i]
-        
+            fader_prev[i] = fader_next[i]      
     time.sleep(0.001)
+
